@@ -1,0 +1,683 @@
+import React, { useState } from 'react';
+import { Search, MapPin, Star, MessageCircle, User, Store, Home, FileText, Bell, Settings, Phone, Mail, Clock, Award, TrendingUp, DollarSign, Users } from 'lucide-react';
+
+const BudgetudoApp = () => {
+  const [currentView, setCurrentView] = useState('home');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('todos');
+  const [selectedBusiness, setSelectedBusiness] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [orcamentos, setOrcamentos] = useState([]);
+  const [notifications, setNotifications] = useState(3);
+  const [formData, setFormData] = useState({ description: '', urgency: 'normal' });
+  const [swipeOffset, setSwipeOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+
+  const [businesses] = useState([
+    {
+      id: 1,
+      name: "EletroTech Consertos",
+      category: "Eletrônicos",
+      description: "Especialistas em conserto de smartphones, notebooks e tablets. 10 anos de experiência.",
+      rating: 4.9,
+      reviews: 287,
+      location: "Centro, São Paulo - SP",
+      distance: "1.2 km",
+      phone: "(11) 98765-4321",
+      email: "contato@eletrotech.com",
+      image: "🔧",
+      responseTime: "2 horas",
+      completedJobs: 1250,
+      price: "$$"
+    },
+    {
+      id: 2,
+      name: "Reformas Silva",
+      category: "Construção",
+      description: "Reformas residenciais e comerciais. Equipe qualificada e materiais de qualidade.",
+      rating: 4.8,
+      reviews: 198,
+      location: "Jardins, São Paulo - SP",
+      distance: "2.5 km",
+      phone: "(11) 97654-3210",
+      email: "orcamento@reformassilva.com",
+      image: "🏗️",
+      responseTime: "4 horas",
+      completedJobs: 856,
+      price: "$$$"
+    },
+    {
+      id: 3,
+      name: "CleanPro Limpeza",
+      category: "Limpeza",
+      description: "Limpeza residencial e pós-obra. Produtos ecológicos e profissionais treinados.",
+      rating: 4.7,
+      reviews: 342,
+      location: "Vila Mariana, São Paulo - SP",
+      distance: "3.1 km",
+      phone: "(11) 96543-2109",
+      email: "clean@cleanpro.com",
+      image: "🧹",
+      responseTime: "1 hora",
+      completedJobs: 2100,
+      price: "$"
+    },
+    {
+      id: 4,
+      name: "AutoMaster Mecânica",
+      category: "Automotivo",
+      description: "Mecânica geral, elétrica e funilaria. Atendemos todas as marcas com garantia.",
+      rating: 4.9,
+      reviews: 412,
+      location: "Moema, São Paulo - SP",
+      distance: "1.8 km",
+      phone: "(11) 95432-1098",
+      email: "contato@automaster.com",
+      image: "🚗",
+      responseTime: "3 horas",
+      completedJobs: 1580,
+      price: "$$"
+    },
+    {
+      id: 5,
+      name: "GreenGarden Jardinagem",
+      category: "Jardinagem",
+      description: "Paisagismo, manutenção de jardins e instalação de gramados. Projetos personalizados.",
+      rating: 4.6,
+      reviews: 156,
+      location: "Pinheiros, São Paulo - SP",
+      distance: "4.2 km",
+      phone: "(11) 94321-0987",
+      email: "verde@greengarden.com",
+      image: "🌿",
+      responseTime: "6 horas",
+      completedJobs: 645,
+      price: "$$"
+    },
+    {
+      id: 6,
+      name: "TechHelp Informática",
+      category: "Eletrônicos",
+      description: "Suporte técnico, montagem de PCs e redes. Atendimento domiciliar disponível.",
+      rating: 4.8,
+      reviews: 223,
+      location: "Itaim Bibi, São Paulo - SP",
+      distance: "2.9 km",
+      phone: "(11) 93210-9876",
+      email: "suporte@techhelp.com",
+      image: "💻",
+      responseTime: "2 horas",
+      completedJobs: 980,
+      price: "$"
+    }
+  ]);
+
+  const categories = [
+    { id: 'todos', name: 'Todos', icon: '🏪' },
+    { id: 'Eletrônicos', name: 'Eletrônicos', icon: '🔧' },
+    { id: 'Construção', name: 'Construção', icon: '🏗️' },
+    { id: 'Limpeza', name: 'Limpeza', icon: '🧹' },
+    { id: 'Automotivo', name: 'Automotivo', icon: '🚗' },
+    { id: 'Jardinagem', name: 'Jardinagem', icon: '🌿' }
+  ];
+
+  const filteredBusinesses = businesses.filter(b => {
+    const matchesSearch = b.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         b.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'todos' || b.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const handleRequestOrcamento = (business) => {
+    setSelectedBusiness(business);
+    setFormData({ description: '', urgency: 'normal' });
+    setSwipeOffset(0);
+    setIsDragging(false);
+    setShowModal(true);
+  };
+
+  const submitOrcamento = () => {
+    if (!formData.description.trim()) {
+      alert('Por favor, descreva o serviço que precisa.');
+      return;
+    }
+
+    const newOrcamento = {
+      id: Date.now(),
+      business: selectedBusiness,
+      description: formData.description,
+      urgency: formData.urgency,
+      status: 'Pendente',
+      date: new Date().toLocaleDateString('pt-BR')
+    };
+    setOrcamentos([newOrcamento, ...orcamentos]);
+    setShowModal(false);
+    setNotifications(notifications + 1);
+    setSwipeOffset(0);
+    setIsDragging(false);
+    alert('✅ Orçamento solicitado com sucesso! O prestador entrará em contato em breve.');
+  };
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.clientX || e.touches?.[0]?.clientX || 0);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    const currentX = e.clientX || e.touches?.[0]?.clientX || 0;
+    const diff = currentX - startX;
+    if (diff > 0 && diff < 250) {
+      setSwipeOffset(diff);
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (swipeOffset > 200) {
+      submitOrcamento();
+    } else {
+      setSwipeOffset(0);
+    }
+    setIsDragging(false);
+  };
+
+  const BusinessCard = ({ business }) => (
+    <div className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-xl transition-all cursor-pointer border border-gray-100">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="text-4xl">{business.image}</div>
+          <div>
+            <h3 className="font-bold text-lg text-gray-800">{business.name}</h3>
+            <span className="text-xs text-purple-600 font-semibold bg-purple-50 px-2 py-1 rounded-full">
+              {business.category}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <p className="text-gray-600 text-sm mb-3 line-clamp-2">{business.description}</p>
+      
+      <div className="flex items-center gap-4 mb-3 text-sm">
+        <div className="flex items-center gap-1 text-yellow-500">
+          <Star size={16} fill="currentColor" />
+          <span className="font-bold text-gray-800">{business.rating}</span>
+          <span className="text-gray-500">({business.reviews})</span>
+        </div>
+        <div className="flex items-center gap-1 text-gray-600">
+          <MapPin size={14} />
+          <span>{business.distance}</span>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between text-xs text-gray-500 mb-3 pb-3 border-b">
+        <div className="flex items-center gap-1">
+          <Clock size={14} />
+          Responde em {business.responseTime}
+        </div>
+        <div className="font-semibold text-green-600">{business.price}</div>
+      </div>
+      
+      <button
+        onClick={() => handleRequestOrcamento(business)}
+        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-pink-700 transition"
+      >
+        Solicitar Orçamento
+      </button>
+    </div>
+  );
+
+  const HomeView = () => (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-3xl p-8 text-white">
+        <h1 className="text-4xl font-bold mb-3">Encontre os melhores profissionais</h1>
+        <p className="text-xl mb-6 opacity-90">Solicite orçamentos grátis e compare preços</p>
+        
+        <div className="flex gap-3 bg-white rounded-full p-2 shadow-lg">
+          <input
+            type="text"
+            placeholder="O que você precisa? (ex: conserto de celular)"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 px-4 py-3 text-gray-800 outline-none bg-transparent"
+          />
+          <button className="bg-purple-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-purple-700 transition flex items-center gap-2">
+            <Search size={20} />
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">Categorias Populares</h2>
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`p-4 rounded-2xl text-center transition-all ${
+                selectedCategory === cat.id
+                  ? 'bg-purple-600 text-white shadow-lg scale-105'
+                  : 'bg-white text-gray-700 hover:shadow-md'
+              }`}
+            >
+              <div className="text-3xl mb-2">{cat.icon}</div>
+              <div className="text-sm font-semibold">{cat.name}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-white rounded-2xl p-6 text-center shadow-sm">
+          <div className="text-3xl font-bold text-purple-600">2.5k+</div>
+          <div className="text-gray-600 text-sm mt-1">Profissionais</div>
+        </div>
+        <div className="bg-white rounded-2xl p-6 text-center shadow-sm">
+          <div className="text-3xl font-bold text-pink-600">15k+</div>
+          <div className="text-gray-600 text-sm mt-1">Orçamentos</div>
+        </div>
+        <div className="bg-white rounded-2xl p-6 text-center shadow-sm">
+          <div className="text-3xl font-bold text-blue-600">4.8★</div>
+          <div className="text-gray-600 text-sm mt-1">Avaliação</div>
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-bold text-gray-800">Profissionais em Destaque</h2>
+          <button className="text-purple-600 font-semibold hover:text-purple-700">Ver todos</button>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredBusinesses.slice(0, 6).map(business => (
+            <BusinessCard key={business.id} business={business} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const SearchView = () => (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <h2 className="text-2xl font-bold mb-4 text-gray-800">Buscar Profissionais</h2>
+        <div className="flex gap-3 mb-4">
+          <input
+            type="text"
+            placeholder="Digite o serviço que precisa..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-purple-600 transition"
+          />
+          <button className="bg-purple-600 text-white px-6 rounded-xl hover:bg-purple-700 transition">
+            <Search size={20} />
+          </button>
+        </div>
+        
+        <div className="flex gap-2 flex-wrap">
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold transition ${
+                selectedCategory === cat.id
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {cat.icon} {cat.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-gray-600 mb-4">
+        Encontrados <span className="font-bold text-purple-600">{filteredBusinesses.length}</span> profissionais
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredBusinesses.map(business => (
+          <BusinessCard key={business.id} business={business} />
+        ))}
+      </div>
+    </div>
+  );
+
+  const OrcamentosView = () => (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <h2 className="text-2xl font-bold mb-2 text-gray-800">Meus Orçamentos</h2>
+        <p className="text-gray-600">Acompanhe suas solicitações e propostas recebidas</p>
+      </div>
+
+      {orcamentos.length === 0 ? (
+        <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
+          <div className="text-6xl mb-4">📋</div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Nenhum orçamento ainda</h3>
+          <p className="text-gray-600 mb-6">Comece solicitando orçamentos aos profissionais</p>
+          <button
+            onClick={() => setCurrentView('search')}
+            className="bg-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-purple-700 transition"
+          >
+            Buscar Profissionais
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {orcamentos.map(orc => (
+            <div key={orc.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">{orc.business.image}</div>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-800">{orc.business.name}</h3>
+                    <p className="text-sm text-gray-600">{orc.business.category}</p>
+                  </div>
+                </div>
+                <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-semibold">
+                  {orc.status}
+                </span>
+              </div>
+              
+              <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                <p className="text-gray-700">{orc.description}</p>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <div className="text-gray-600">
+                  Solicitado em {orc.date}
+                </div>
+                <button className="text-purple-600 font-semibold hover:text-purple-700 flex items-center gap-2">
+                  <MessageCircle size={16} />
+                  Enviar Mensagem
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const ProfileView = () => (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-white">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-3xl">
+            👤
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold">João Silva</h2>
+            <p className="opacity-90">Cliente desde 2024</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="text-center">
+            <div className="text-2xl font-bold">{orcamentos.length}</div>
+            <div className="text-sm opacity-90">Orçamentos</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold">8</div>
+            <div className="text-sm opacity-90">Avaliações</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold">4.9★</div>
+            <div className="text-sm opacity-90">Nota Média</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Configurações da Conta</h3>
+        
+        <button className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-gray-50 transition text-left">
+          <User size={20} className="text-purple-600" />
+          <div>
+            <div className="font-semibold text-gray-800">Dados Pessoais</div>
+            <div className="text-sm text-gray-600">Editar nome, email e telefone</div>
+          </div>
+        </button>
+
+        <button className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-gray-50 transition text-left">
+          <MapPin size={20} className="text-purple-600" />
+          <div>
+            <div className="font-semibold text-gray-800">Endereços</div>
+            <div className="text-sm text-gray-600">Gerenciar seus endereços</div>
+          </div>
+        </button>
+
+        <button className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-gray-50 transition text-left">
+          <Bell size={20} className="text-purple-600" />
+          <div>
+            <div className="font-semibold text-gray-800">Notificações</div>
+            <div className="text-sm text-gray-600">Preferências de notificações</div>
+          </div>
+        </button>
+
+        <button className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-gray-50 transition text-left">
+          <Settings size={20} className="text-purple-600" />
+          <div>
+            <div className="font-semibold text-gray-800">Configurações</div>
+            <div className="text-sm text-gray-600">Segurança e privacidade</div>
+          </div>
+        </button>
+      </div>
+
+      <button className="w-full bg-red-50 text-red-600 py-4 rounded-2xl font-semibold hover:bg-red-100 transition">
+        Sair da Conta
+      </button>
+    </div>
+  );
+
+  const OrcamentoModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Solicitar Orçamento</h2>
+          <button
+            onClick={() => setShowModal(false)}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+
+        {selectedBusiness && (
+          <div className="bg-purple-50 rounded-2xl p-4 mb-6 flex items-center gap-3">
+            <div className="text-3xl">{selectedBusiness.image}</div>
+            <div>
+              <h3 className="font-bold text-gray-800">{selectedBusiness.name}</h3>
+              <p className="text-sm text-gray-600">{selectedBusiness.category}</p>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Descreva o serviço que precisa *
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              rows="4"
+              placeholder="Ex: Preciso consertar a tela do meu iPhone 12..."
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-purple-600 transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 font-semibold mb-2">
+              Urgência *
+            </label>
+            <select
+              value={formData.urgency}
+              onChange={(e) => setFormData({...formData, urgency: e.target.value})}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-purple-600 transition"
+            >
+              <option value="normal">🟢 Normal - até 7 dias</option>
+              <option value="media">🟡 Média - até 3 dias</option>
+              <option value="baixa">🟠 Baixa - até 24 horas</option>
+              <option value="alta">🔴 Alta - até 6 horas</option>
+              <option value="urgente">⚡ Preciso Urgente - até 1 hora</option>
+            </select>
+          </div>
+
+          <div className="bg-blue-50 rounded-xl p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">💡</div>
+              <div className="text-sm text-gray-700">
+                <p className="font-semibold mb-1">Dica:</p>
+                <p>Quanto mais detalhes você fornecer, mais preciso será o orçamento que você receberá!</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-1 overflow-hidden">
+              <div 
+                className="bg-white rounded-xl p-4 relative"
+                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
+              >
+                <div 
+                  className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-l-xl transition-all flex items-center justify-center text-white font-bold"
+                  style={{ 
+                    width: `${Math.min((swipeOffset / 250) * 100, 100)}%`,
+                    opacity: swipeOffset > 0 ? 1 : 0
+                  }}
+                >
+                  {swipeOffset > 200 && <span className="text-lg">✓ Enviar</span>}
+                </div>
+                
+                <div 
+                  className="relative z-10 flex items-center justify-between transition-transform"
+                  style={{ transform: `translateX(${swipeOffset}px)` }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-xl">
+                      →
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-800">Deslize para enviar</p>
+                      <p className="text-xs text-gray-500">Arraste o botão para a direita</p>
+                    </div>
+                  </div>
+                  <div className="text-2xl">
+                    {swipeOffset > 200 ? '✓' : '→→'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowModal(false)}
+            className="w-full mt-4 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
+                B
+              </div>
+              <span className="text-xl font-bold text-gray-800">Budgetudo</span>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <button className="relative">
+                <Bell size={24} className="text-gray-600" />
+                {notifications > 0 && (
+                  <span className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {notifications}
+                  </span>
+                )}
+              </button>
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center cursor-pointer">
+                <User size={20} className="text-purple-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-6 pb-24">
+        {currentView === 'home' && <HomeView />}
+        {currentView === 'search' && <SearchView />}
+        {currentView === 'orcamentos' && <OrcamentosView />}
+        {currentView === 'profile' && <ProfileView />}
+      </main>
+
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-4 gap-2 py-2">
+            <button
+              onClick={() => setCurrentView('home')}
+              className={`flex flex-col items-center py-3 rounded-xl transition ${
+                currentView === 'home' ? 'text-purple-600 bg-purple-50' : 'text-gray-600'
+              }`}
+            >
+              <Home size={24} />
+              <span className="text-xs font-semibold mt-1">Início</span>
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('search')}
+              className={`flex flex-col items-center py-3 rounded-xl transition ${
+                currentView === 'search' ? 'text-purple-600 bg-purple-50' : 'text-gray-600'
+              }`}
+            >
+              <Search size={24} />
+              <span className="text-xs font-semibold mt-1">Buscar</span>
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('orcamentos')}
+              className={`flex flex-col items-center py-3 rounded-xl transition relative ${
+                currentView === 'orcamentos' ? 'text-purple-600 bg-purple-50' : 'text-gray-600'
+              }`}
+            >
+              <FileText size={24} />
+              <span className="text-xs font-semibold mt-1">Orçamentos</span>
+              {orcamentos.length > 0 && (
+                <span className="absolute top-1 right-1/4 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-bold">
+                  {orcamentos.length}
+                </span>
+              )}
+            </button>
+            
+            <button
+              onClick={() => setCurrentView('profile')}
+              className={`flex flex-col items-center py-3 rounded-xl transition ${
+                currentView === 'profile' ? 'text-purple-600 bg-purple-50' : 'text-gray-600'
+              }`}
+            >
+              <User size={24} />
+              <span className="text-xs font-semibold mt-1">Perfil</span>
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {showModal && <OrcamentoModal />}
+    </div>
+  );
+};
+
+export default BudgetudoApp;
